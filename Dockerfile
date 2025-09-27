@@ -1,8 +1,10 @@
 # Use Lambda "Provided" base image for build
 FROM public.ecr.aws/lambda/provided:al2023 AS build
 
-RUN dnf install -y git
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+RUN dnf install -y git tar
+# Install UV directly instead of copying from GitHub Container Registry
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:$PATH"
 
 # Copy the soure code into the image to install it and create the environment
 # TODO do we want to copy the sdist or wheel instead?
@@ -37,7 +39,8 @@ COPY models/ /opt/poprox/models/
 RUN /opt/poprox/bin/python -m poprox_recommender.api.main
 
 # Copy the bootstrap script
-COPY --chmod=0555 lambda-bootstrap.sh /var/runtime/bootstrap
+COPY lambda-bootstrap.sh /var/runtime/bootstrap
+RUN chmod 0555 /var/runtime/bootstrap
 
 # Set the transformers cache to a writeable directory
 ENV TRANSFORMERS_CACHE=/tmp/.transformers
