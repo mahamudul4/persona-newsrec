@@ -1,6 +1,6 @@
 useDotenv: true
 
-service: poprox-default-recommender
+service: poprox-persona-service
 frameworkVersion: "3"
 
 provider:
@@ -12,6 +12,10 @@ provider:
   memorySize: 2048 # 2gb
   timeout: 25
   architecture: x86_64
+  environment:
+    GEMINI_API_KEY: ${env:GEMINI_API_KEY}
+    POPROX_TEST_PERSONA: "false"
+    POPROX_DEFAULT_PIPELINE: "persona_recommender"
 
   iam:
     role:
@@ -25,9 +29,13 @@ provider:
   ecr:
     # In this section you can define images that will be built locally and uploaded to ECR
     images:
-      poprox-recommender:
+      poprox-persona:
         path: "./"
         platform: linux/amd64
+        buildArgs:
+          AWS_ACCESS_KEY_ID: ${env:AWS_ACCESS_KEY_ID}
+          AWS_SECRET_ACCESS_KEY: ${env:AWS_SECRET_ACCESS_KEY}
+          AWS_SESSION_TOKEN: ${env:AWS_SESSION_TOKEN}
 
 package:
   patterns:
@@ -41,7 +49,7 @@ package:
 functions:
   generateRecommendations:
     image:
-      name: poprox-recommender
+      name: poprox-persona
     memorySize: 4096
     ephemeralStorageSize: 2048
     events:
